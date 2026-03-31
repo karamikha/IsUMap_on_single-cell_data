@@ -6,6 +6,7 @@ from sklearn.model_selection import cross_val_score, StratifiedKFold
 
 
 def pairwise_distance_correlation(X_high_dim: np.ndarray, X_low_dim: np.ndarray, metric_high: str = 'euclidean', metric_low: str = 'euclidean', method: str = 'spearman'):
+    """Compute the correlation between pairwise distances"""
     if X_high_dim.shape[0] != X_low_dim.shape[0]:
         raise ValueError('X_high_dim and X_low_dim must have the same number of samples')
 
@@ -23,6 +24,7 @@ def pairwise_distance_correlation(X_high_dim: np.ndarray, X_low_dim: np.ndarray,
 
 
 def knn_accuracy(X_low_dim: np.ndarray, y: np.ndarray, n_neighbors: int = 10, cv: int = 5, random_state: int = 42):
+    """Compute the kNN-accuracy"""
     if X_low_dim.shape[0] != y.shape[0]:
         raise ValueError('X_low_dim and y must have the same number of samples')
 
@@ -34,6 +36,7 @@ def knn_accuracy(X_low_dim: np.ndarray, y: np.ndarray, n_neighbors: int = 10, cv
 
 
 def knn_recall(X_high_dim: np.ndarray, X_low_dim: np.ndarray, n_neighbors: int = 10, metric: str = 'euclidean'):
+    """Compute the kNN-recall"""
     if X_high_dim.shape[0] != X_low_dim.shape[0]:
         raise ValueError('X_high_dim and X_low_dim must have the same number of samples')
 

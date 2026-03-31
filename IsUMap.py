@@ -30,6 +30,7 @@ class IsUMap:
         self.random_state = random_state
     
     def _validate_params(self, n_samples: int):
+        """Validate the parameters"""
         if not isinstance(self.n_neighbors, int) or self.n_neighbors < 2:
             raise ValueError('n_neighbors must be an integer >= 2')
         
@@ -44,6 +45,7 @@ class IsUMap:
     
     @staticmethod
     def update_edge(edge_weights: dict[tuple[int, int], float], u: int, v: int, w: float):
+        """Update edge weight"""
         if u != v:
             a, b = (u, v) if u < v else (v, u)
             old = edge_weights.get((a, b))
@@ -51,6 +53,7 @@ class IsUMap:
                 edge_weights[(a, b)] = w
 
     def build_merged_graph(self, inds: np.ndarray, dists: np.ndarray):
+        """Build the merged graph"""
         n_samples = inds.shape[0]
         edge_weights = {}
 
@@ -66,7 +69,7 @@ class IsUMap:
             for k, j in enumerate(neigh_idx):
                 self.update_edge(edge_weights, i, int(j), float(local_w[k]))
 
-            # в um соединяем точки не только с центром "звезды"
+            # UM connects dots not only with the center
             if self.mode == 'um':
                 m = len(neigh_idx)
                 for a_ind in range(m):
@@ -81,12 +84,13 @@ class IsUMap:
 
     @staticmethod
     def edge_dict_to_csr(edge_weights: dict[tuple[int, int], float], n_samples: int):
-        # задаём диагонали
+        """Convert dict with edges to csr matrix"""
+        # init diags
         rows = list(range(n_samples))
         cols = list(range(n_samples))
         data = [0.0] * n_samples
 
-        # формируем остальные рёбра
+        # create other edges
         for (u, v), w in edge_weights.items():
             rows.extend([u, v])
             cols.extend([v, u])
@@ -96,6 +100,7 @@ class IsUMap:
 
     @staticmethod
     def classical_mds(D: np.ndarray, n_components: int):
+        """Classical MDS"""
         D = np.asarray(D, dtype=np.float64)
         n = D.shape[0]
 
@@ -128,11 +133,11 @@ class IsUMap:
         if X.ndim != 2:
             raise ValueError('X must be a 2D array')
 
-        # проверяем корректность данных
+        # check data
         n_samples = X.shape[0]
         self._validate_params(n_samples)
 
-        # ищем расстояния
+        # find distances
         nn = NearestNeighbors(
             n_neighbors=self.n_neighbors + 1,
             metric=self.metric,
@@ -142,11 +147,11 @@ class IsUMap:
         dists = dists[:, 1:]
         inds = inds[:, 1:]
 
-        # строим общий граф (расстояния считаем через epmet/um)
+        # create merged graph
         edge_weights = self.build_merged_graph(inds, dists)
         graph = self.edge_dict_to_csr(edge_weights, n_samples)
 
-        # обновляем infty на основе кратчайших путей
+        # update infty on the basis of shortest paths
         D = shortest_path(graph, directed=False, unweighted=False)
         if not np.isfinite(D).all():
             raise ValueError('Infinities in merged graph')
